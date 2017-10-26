@@ -110,9 +110,14 @@ config ROCKCHIP_RK3328
 	select ARM64
 	select SUPPORT_SPL
 	select SPL
+	select SUPPORT_TPL
+	select TPL
+	select TPL_NEEDS_SEPARATE_TEXT_BASE if TPL
+	select TPL_NEEDS_SEPARATE_STACK if TPL
 	imply ROCKCHIP_COMMON_BOARD
 	imply SPL_ROCKCHIP_COMMON_BOARD
 	imply SPL_SERIAL_SUPPORT
+	imply TPL_SERIAL_SUPPORT
 	imply SPL_SEPARATE_BSS
 	select ENABLE_ARM_SOC_BOOT0_HOOK
 	select DEBUG_UART_BOARD_INIT
@@ -123,6 +128,22 @@ config ROCKCHIP_RK3328
 	  video interfaces supporting HDMI and eDP, several DDR3 options
 	  and video codec support. Peripherals include Gigabit Ethernet,
 	  USB2 host and OTG, SDIO, I2S, UARTs, SPI, I2C and PWMs.
+
+if ROCKCHIP_RK3328
+
+config TPL_LDSCRIPT
+	default "arch/arm/mach-rockchip/u-boot-tpl-v8.lds"
+
+config TPL_TEXT_BASE
+        default 0xff091000
+
+config TPL_MAX_SIZE
+        default 28672
+
+config TPL_STACK
+        default 0xff098000
+
+endif
 
 config ROCKCHIP_RK3368
 	bool "Support Rockchip RK3368"
