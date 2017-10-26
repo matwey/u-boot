@@ -57,6 +57,18 @@ config ROCKCHIP_RK3288
 config ROCKCHIP_RK3328
 	bool "Support Rockchip RK3328"
 	select ARM64
+	select SUPPORT_SPL
+	select SUPPORT_TPL
+	select SPL
+	select TPL
+	select TPL_NEEDS_SEPARATE_TEXT_BASE if TPL
+	select TPL_NEEDS_SEPARATE_STACK if TPL
+	imply SPL_SERIAL_SUPPORT
+	imply TPL_SERIAL_SUPPORT
+	imply SPL_SEPARATE_BSS
+	select ENABLE_ARM_SOC_BOOT0_HOOK
+	select DEBUG_UART_BOARD_INIT
+	select SYS_NS16550
 	help
 	  The Rockchip RK3328 is a ARM-based SoC with a quad-core Cortex-A53.
 	  including NEON and GPU, 1MB L2 cache, Mali-T7 graphics, two
@@ -141,7 +153,7 @@ config SPL_ROCKCHIP_BACK_TO_BROM
 
 config TPL_ROCKCHIP_BACK_TO_BROM
 	bool "TPL returns to bootrom"
-	default y if ROCKCHIP_RK3368
+	default y if ROCKCHIP_RK3368 || ROCKCHIP_RK3328
 	select ROCKCHIP_BROM_HELPER
 	depends on TPL
 	help
