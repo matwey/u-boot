@@ -6,6 +6,7 @@
 
 #include <common.h>
 #include <command.h>
+#include <div64.h>
 #include <asm/system.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -92,6 +93,11 @@ uint64_t get_ticks(void)
 	gd->arch.tbl = ticks;
 
 	return ticks;
+}
+
+ulong timer_get_boot_us(void)
+{
+	return lldiv(get_ticks(), CONFIG_SYS_HZ_CLOCK / (CONFIG_SYS_HZ * 1000));
 }
 
 unsigned long usec2ticks(unsigned long usec)
