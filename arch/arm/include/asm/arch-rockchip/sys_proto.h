@@ -6,6 +6,10 @@
 #ifndef _ASM_ARCH_SYS_PROTO_H
 #define _ASM_ARCH_SYS_PROTO_H
 
+#ifndef CONFIG_SPL_FRAMEWORK
+void sdram_init(void);
+#endif
+
 #ifdef CONFIG_ROCKCHIP_RK3288
 #include <asm/armv7.h>
 
