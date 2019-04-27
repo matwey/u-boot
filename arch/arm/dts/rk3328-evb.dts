@@ -5,6 +5,7 @@
 
 /dts-v1/;
 #include "rk3328.dtsi"
+#include "rk3328-u-boot.dtsi"
 
 / {
 	model = "Rockchip RK3328 EVB";
@@ -237,4 +238,3 @@
 		};
 	};
 };
-
