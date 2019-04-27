@@ -61,6 +61,7 @@ void board_debug_uart_init(void)
 	writel(0x1, &uart->rbr);
 	writel(0x3, &uart->lcr);
 
+#if 0
 	/* Enable early UART2 */
 	rk_clrsetreg(&grf->com_iomux,
 		     IOMUX_SEL_UART2_MASK,
@@ -71,6 +72,7 @@ void board_debug_uart_init(void)
 	rk_clrsetreg(&grf->gpio2a_iomux,
 		     GPIO2A1_SEL_MASK,
 		     GPIO2A1_UART2_RX_M1 << GPIO2A1_SEL_SHIFT);
+#endif
 
 	/* enable FIFO */
 	writel(0x1, &uart->sfe);
@@ -78,7 +80,7 @@ void board_debug_uart_init(void)
 
 void board_return_to_bootrom(void)
 {
-	back_to_bootrom();
+	back_to_bootrom(BROM_BOOT_NEXTSTAGE);
 }
 
 u32 spl_boot_device(void)
