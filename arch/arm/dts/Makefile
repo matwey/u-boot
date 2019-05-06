@@ -83,6 +83,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += \
 	rk3288-veyron-minnie.dtb \
 	rk3288-veyron-speedy.dtb \
 	rk3288-vyasa.dtb \
+	rk3328-rock64.dtb \
 	rk3328-evb.dtb \
 	rk3399-ficus.dtb \
 	rk3368-lion.dtb \
