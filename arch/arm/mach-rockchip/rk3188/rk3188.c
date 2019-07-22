@@ -3,8 +3,11 @@
  * (C) Copyright 2019 Rockchip Electronics Co., Ltd
  */
 #include <common.h>
+#include <dm.h>
+#include <syscon.h>
 #include <asm/io.h>
 #include <asm/arch-rockchip/bootrom.h>
+#include <asm/arch-rockchip/clock.h>
 #include <asm/arch-rockchip/grf_rk3188.h>
 #include <asm/arch-rockchip/hardware.h>
 
@@ -42,6 +45,7 @@ void board_debug_uart_init(void)
 }
 #endif
 
+#ifdef CONFIG_SPL_BUILD
 int arch_cpu_init(void)
 {
 #ifdef CONFIG_ROCKCHIP_USB_UART
@@ -64,8 +68,20 @@ int arch_cpu_init(void)
 		     BYPASSSEL_MASK | BYPASSDMEN_MASK,
 		     1 << BYPASSSEL_SHIFT | 1 << BYPASSDMEN_SHIFT);
 #endif
+
+	grf = syscon_get_first_range(ROCKCHIP_SYSCON_GRF);
+	if (IS_ERR(grf)) {
+		pr_err("grf syscon returned %ld\n", PTR_ERR(grf));
+	} else {
+		/* enable noc remap to mimic legacy loaders */
+		rk_clrsetreg(&grf->soc_con0,
+			     NOC_REMAP_MASK << NOC_REMAP_SHIFT,
+			     NOC_REMAP_MASK << NOC_REMAP_SHIFT);
+	}
+
 	return 0;
 }
+#endif
 
 #ifdef CONFIG_SPL_BUILD
 static int setup_led(void)
