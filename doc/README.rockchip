@@ -309,11 +309,6 @@ Booting from an SD card on Pine64 Rock64 (RK3328)
 For Rock64 rk3328 board the following three parts are required:
 TPL, SPL, and the u-boot image tree blob.
 
-  - Create TPL/SPL image
-
-    => tools/mkimage -n rk3328 -T rksd -d tpl/u-boot-tpl.bin idbloader.img
-    => cat spl/u-boot-spl.bin >> idbloader.img
-
   - Write TPL/SPL image at 64 sector
 
     => sudo dd if=idbloader.img of=/dev/mmcblk0 seek=64
