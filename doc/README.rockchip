@@ -324,12 +324,6 @@ To write an image that boots from an SD card (assumed to be /dev/sdc):
 
 Option 1: Package the image with Rockchip miniloader:
 
-  - Create idbloader.img
-
-    => cd /path/to/u-boot
-    => ./tools/mkimage  -n rk3399 -T rksd -d /path/to/rkbin/bin/rk33/rk3399_ddr_800MHz_v1.20.bin idbloader.img
-    => cat /path/to/rkbin/bin/rk33/rk3399_miniloader_v1.19.bin >> idbloader.img
-
   - Write idbloader.img at 64 sector
 
     => sudo dd if=idbloader.img of=/dev/sdc seek=64
