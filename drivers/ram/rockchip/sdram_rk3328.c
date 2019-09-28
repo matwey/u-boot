@@ -684,6 +684,8 @@ static int sdram_init(struct dram_info *dram,
 	while ((readl(pctl_base + DDR_PCTL2_STAT) & 0x7) == 0)
 		continue;
 
+	sdram_print_ddr_info(&sdram_ch.cap_info, &sdram_params->base);
+
 	/* do ddr gate training */
 	if (data_training(dram, 0, sdram_params->base.dramtype) != 0) {
 		printf("data training error\n");
