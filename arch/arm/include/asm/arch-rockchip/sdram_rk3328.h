@@ -411,18 +411,7 @@ struct rk3328_ddr_skew {
 };
 
 struct rk3328_sdram_channel {
-	unsigned int rank;
-	unsigned int col;
-	/* 3:8bank, 2:4bank */
-	unsigned int bk;
-	/* channel buswidth, 2:32bit, 1:16bit, 0:8bit */
-	unsigned int bw;
-	/* die buswidth, 2:32bit, 1:16bit, 0:8bit */
-	unsigned int dbw;
-	unsigned int row_3_4;
-	unsigned int cs0_row;
-	unsigned int cs1_row;
-	unsigned int ddrconfig;
+	struct sdram_cap_info cap_info;
 	struct rk3328_msch_timings noc_timings;
 };
 

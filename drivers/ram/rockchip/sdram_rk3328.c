@@ -223,12 +223,12 @@ static unsigned int calculate_ddrconfig(struct rk3328_sdram_params *sdram_params
 	u32 i, tmp;
 	u32 ddrconf = -1;
 
-	cs = sdram_ch.rank;
-	bw = sdram_ch.bw;
-	die_bw = sdram_ch.dbw;
-	col = sdram_ch.col;
-	row = sdram_ch.cs0_row;
-	bank = sdram_ch.bk;
+	cs = sdram_ch.cap_info.rank;
+	bw = sdram_ch.cap_info.bw;
+	die_bw = sdram_ch.cap_info.dbw;
+	col = sdram_ch.cap_info.col;
+	row = sdram_ch.cap_info.cs0_row;
+	bank = sdram_ch.cap_info.bk;
 
 	if (sdram_params->base.dramtype == DDR4) {
 		tmp = ((cs - 1) << 6) | ((row - 13) << 3) | (bw & 0x2) | die_bw;
@@ -285,13 +285,13 @@ static void set_ctl_address_map(struct dram_info *dram,
 	void __iomem *pctl_base = dram->pctl;
 
 	copy_to_reg((u32 *)(pctl_base + DDR_PCTL2_ADDRMAP0),
-		    &addrmap[sdram_ch.ddrconfig][0], 9 * 4);
-	if (sdram_params->base.dramtype == LPDDR3 && sdram_ch.row_3_4)
+		    &addrmap[sdram_ch.cap_info.ddrconfig][0], 9 * 4);
+	if (sdram_params->base.dramtype == LPDDR3 && sdram_ch.cap_info.row_3_4)
 		setbits_le32(pctl_base + DDR_PCTL2_ADDRMAP6, 1 << 31);
-	if (sdram_params->base.dramtype == DDR4 && sdram_ch.bw == 0x1)
+	if (sdram_params->base.dramtype == DDR4 && sdram_ch.cap_info.bw == 0x1)
 		setbits_le32(pctl_base + DDR_PCTL2_PCCFG, 1 << 8);
 
-	if (sdram_ch.rank == 1)
+	if (sdram_ch.cap_info.rank == 1)
 		clrsetbits_le32(pctl_base + DDR_PCTL2_ADDRMAP0, 0x1f, 0x1f);
 }
 
@@ -378,7 +378,7 @@ static void phy_cfg(struct dram_info *dram,
 		writel(sdram_params->phy_regs.phy[i][1],
 		       phy_base + sdram_params->phy_regs.phy[i][0]);
 	}
-	if (sdram_ch.bw == 2) {
+	if (sdram_ch.cap_info.bw == 2) {
 		clrsetbits_le32(PHY_REG(phy_base, 0), 0xf << 4, 0xf << 4);
 	} else {
 		clrsetbits_le32(PHY_REG(phy_base, 0), 0xf << 4, 3 << 4);
@@ -585,18 +585,18 @@ static void dram_all_config(struct dram_info *dram,
 {
 	u32 sys_reg = 0, tmp = 0;
 
-	set_ddrconfig(dram, sdram_ch.ddrconfig);
+	set_ddrconfig(dram, sdram_ch.cap_info.ddrconfig);
 
 	sys_reg |= SYS_REG_ENC_DDRTYPE(sdram_params->base.dramtype);
-	sys_reg |= SYS_REG_ENC_ROW_3_4(sdram_ch.row_3_4, 0);
-	sys_reg |= SYS_REG_ENC_RANK(sdram_ch.rank, 0);
-	sys_reg |= SYS_REG_ENC_COL(sdram_ch.col, 0);
-	sys_reg |= SYS_REG_ENC_BK(sdram_ch.bk, 0);
-	SYS_REG_ENC_CS0_ROW(sdram_ch.cs0_row, sys_reg, tmp, 0);
-	if (sdram_ch.cs1_row)
-		SYS_REG_ENC_CS1_ROW(sdram_ch.cs1_row, sys_reg, tmp, 0);
-	sys_reg |= SYS_REG_ENC_BW(sdram_ch.bw, 0);
-	sys_reg |= SYS_REG_ENC_DBW(sdram_ch.dbw, 0);
+	sys_reg |= SYS_REG_ENC_ROW_3_4(sdram_ch.cap_info.row_3_4, 0);
+	sys_reg |= SYS_REG_ENC_RANK(sdram_ch.cap_info.rank, 0);
+	sys_reg |= SYS_REG_ENC_COL(sdram_ch.cap_info.col, 0);
+	sys_reg |= SYS_REG_ENC_BK(sdram_ch.cap_info.bk, 0);
+	SYS_REG_ENC_CS0_ROW(sdram_ch.cap_info.cs0_row, sys_reg, tmp, 0);
+	if (sdram_ch.cap_info.cs1_row)
+		SYS_REG_ENC_CS1_ROW(sdram_ch.cap_info.cs1_row, sys_reg, tmp, 0);
+	sys_reg |= SYS_REG_ENC_BW(sdram_ch.cap_info.bw, 0);
+	sys_reg |= SYS_REG_ENC_DBW(sdram_ch.cap_info.dbw, 0);
 
 	writel(sys_reg, &dram->grf->os_reg[2]);
 
@@ -673,7 +673,7 @@ static int sdram_init(struct dram_info *dram,
 	/* release ctrl presetn, and config ctl registers */
 	rkclk_ddr_reset(dram, 1, 0, 0, 0);
 	pctl_cfg(dram, sdram_params);
-	sdram_ch.ddrconfig = calculate_ddrconfig(sdram_params);
+	sdram_ch.cap_info.ddrconfig = calculate_ddrconfig(sdram_params);
 	set_ctl_address_map(dram, sdram_params);
 	phy_cfg(dram, sdram_params);
 
@@ -820,17 +820,17 @@ static u64 dram_detect_cap(struct dram_info *dram,
 	/* restore auto low-power */
 	writel(pwrctl, pctl_base + DDR_PCTL2_PWRCTL);
 
-	sdram_ch.rank = cs + 1;
-	sdram_ch.col = col;
-	sdram_ch.bk = bk;
-	sdram_ch.dbw = dbw;
-	sdram_ch.bw = bw;
-	sdram_ch.cs0_row = row;
+	sdram_ch.cap_info.rank = cs + 1;
+	sdram_ch.cap_info.col = col;
+	sdram_ch.cap_info.bk = bk;
+	sdram_ch.cap_info.dbw = dbw;
+	sdram_ch.cap_info.bw = bw;
+	sdram_ch.cap_info.cs0_row = row;
 	if (cs)
-		sdram_ch.cs1_row = row;
+		sdram_ch.cap_info.cs1_row = row;
 	else
-		sdram_ch.cs1_row = 0;
-	sdram_ch.row_3_4 = row_3_4;
+		sdram_ch.cap_info.cs1_row = 0;
+	sdram_ch.cap_info.row_3_4 = row_3_4;
 
 	if (dram_type == DDR4)
 		cap = 1llu << (cs + row + bk + col + ((dbw == 0) ? 2 : 1) + bw);
@@ -856,7 +856,7 @@ static u32 remodify_sdram_params(struct rk3328_sdram_params *sdram_params)
 
 	tmp &= ~((3ul << 30) | (3ul << 24) | (3ul << 12));
 
-	switch (sdram_ch.dbw) {
+	switch (sdram_ch.cap_info.dbw) {
 	case 2:
 		tmp |= (3ul << 30);
 		break;
@@ -869,16 +869,16 @@ static u32 remodify_sdram_params(struct rk3328_sdram_params *sdram_params)
 		break;
 	}
 
-	if (sdram_ch.rank == 2)
+	if (sdram_ch.cap_info.rank == 2)
 		tmp |= 3 << 24;
 	else
 		tmp |= 1 << 24;
 
-	tmp |= (2 - sdram_ch.bw) << 12;
+	tmp |= (2 - sdram_ch.cap_info.bw) << 12;
 
 	sdram_params->pctl_regs.pctl[tmp_adr][1] = tmp;
 
-	if (sdram_ch.bw == 2)
+	if (sdram_ch.cap_info.bw == 2)
 		sdram_ch.noc_timings.ddrtiming.b.bwratio = 0;
 	else
 		sdram_ch.noc_timings.ddrtiming.b.bwratio = 1;
@@ -893,9 +893,9 @@ static int dram_detect_cs1_row(struct rk3328_sdram_params *sdram_params,
 	u32 cs1_bit;
 	void __iomem *test_addr, *cs1_addr;
 	u32 row, bktmp, coltmp, bw;
-	u32 ddrconf = sdram_ch.ddrconfig;
+	u32 ddrconf = sdram_ch.cap_info.ddrconfig;
 
-	if (sdram_ch.rank == 2) {
+	if (sdram_ch.cap_info.rank == 2) {
 		cs1_bit = addrmap[ddrconf][0] + 8;
 
 		if (cs1_bit > 31)
@@ -908,18 +908,18 @@ static int dram_detect_cs1_row(struct rk3328_sdram_params *sdram_params,
 			cs1_bit = 0;
 
 		if (sdram_params->base.dramtype == DDR4) {
-			if (sdram_ch.dbw == 0)
-				bktmp = sdram_ch.bk + 2;
+			if (sdram_ch.cap_info.dbw == 0)
+				bktmp = sdram_ch.cap_info.bk + 2;
 			else
-				bktmp = sdram_ch.bk + 1;
+				bktmp = sdram_ch.cap_info.bk + 1;
 		} else {
-			bktmp = sdram_ch.bk;
+			bktmp = sdram_ch.cap_info.bk;
 		}
-		bw = sdram_ch.bw;
-		coltmp = sdram_ch.col;
+		bw = sdram_ch.cap_info.bw;
+		coltmp = sdram_ch.cap_info.col;
 
 		/* detect cs1 row */
-		for (row = sdram_ch.cs0_row; row > 12; row--) {
+		for (row = sdram_ch.cap_info.cs0_row; row > 12; row--) {
 			test_addr = (void __iomem *)(SDRAM_ADDR + cs1_addr +
 					(1ul << (row + cs1_bit + bktmp +
 					 coltmp + bw - 1ul)));
@@ -954,7 +954,7 @@ static int sdram_init_detect(struct dram_info *dram,
 	sdram_init(dram, sdram_params, 0);
 
 	/* redetect cs1 row */
-	sdram_ch.cs1_row =
+	sdram_ch.cap_info.cs1_row =
 		dram_detect_cs1_row(sdram_params, 0);
 
 	return 0;
