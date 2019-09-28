@@ -428,9 +428,7 @@ struct rk3328_sdram_channel {
 
 struct rk3328_sdram_params {
 	struct rk3328_sdram_channel ch;
-	unsigned int ddr_freq;
-	unsigned int dramtype;
-	unsigned int odt;
+	struct sdram_base_params base;
 	struct rk3328_ddr_pctl_regs pctl_regs;
 	struct rk3328_ddr_phy_regs phy_regs;
 	struct rk3328_ddr_skew skew;

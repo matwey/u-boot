@@ -122,7 +122,7 @@ static void rkclk_configure_ddr(struct dram_info *dram,
 	clrbits_le32(PHY_REG(phy_base, 0xef), 1 << 7);
 
 	/* for inno ddr phy need 2*freq */
-	rkclk_set_dpll(dram,  sdram_params->ddr_freq * 2);
+	rkclk_set_dpll(dram,  sdram_params->base.ddr_freq * 2);
 }
 
 static void phy_soft_reset(struct dram_info *dram)
@@ -154,7 +154,7 @@ static int pctl_cfg(struct dram_info *dram,
 	 * dfi_lp_en_pd=1,dfi_lp_wakeup_pd=2
 	 * hw_lp_idle_x32=1
 	 */
-	if (sdram_params->dramtype == LPDDR3) {
+	if (sdram_params->base.dramtype == LPDDR3) {
 		setbits_le32(pctl_base + DDR_PCTL2_DFILPCFG0, 1);
 		clrsetbits_le32(pctl_base + DDR_PCTL2_DFILPCFG0,
 				0xf << 4,
@@ -230,7 +230,7 @@ static unsigned int calculate_ddrconfig(struct rk3328_sdram_params *sdram_params
 	row = sdram_ch.cs0_row;
 	bank = sdram_ch.bk;
 
-	if (sdram_params->dramtype == DDR4) {
+	if (sdram_params->base.dramtype == DDR4) {
 		tmp = ((cs - 1) << 6) | ((row - 13) << 3) | (bw & 0x2) | die_bw;
 		for (i = 10; i < 17; i++) {
 			if (((tmp & 0x7) == (ddr4_cfg_2_rbc[i - 10] & 0x7)) &&
@@ -286,9 +286,9 @@ static void set_ctl_address_map(struct dram_info *dram,
 
 	copy_to_reg((u32 *)(pctl_base + DDR_PCTL2_ADDRMAP0),
 		    &addrmap[sdram_ch.ddrconfig][0], 9 * 4);
-	if (sdram_params->dramtype == LPDDR3 && sdram_ch.row_3_4)
+	if (sdram_params->base.dramtype == LPDDR3 && sdram_ch.row_3_4)
 		setbits_le32(pctl_base + DDR_PCTL2_ADDRMAP6, 1 << 31);
-	if (sdram_params->dramtype == DDR4 && sdram_ch.bw == 0x1)
+	if (sdram_params->base.dramtype == DDR4 && sdram_ch.bw == 0x1)
 		setbits_le32(pctl_base + DDR_PCTL2_PCCFG, 1 << 8);
 
 	if (sdram_ch.rank == 1)
@@ -332,7 +332,7 @@ static void set_ds_odt(struct dram_info *dram,
 	u32 cmd_drv, clk_drv, dqs_drv, dqs_odt;
 	void __iomem *phy_base = dram->phy;
 
-	if (sdram_params->dramtype == DDR3) {
+	if (sdram_params->base.dramtype == DDR3) {
 		cmd_drv = PHY_DDR3_RON_RTT_34ohm;
 		clk_drv = PHY_DDR3_RON_RTT_45ohm;
 		dqs_drv = PHY_DDR3_RON_RTT_34ohm;
@@ -373,7 +373,7 @@ static void phy_cfg(struct dram_info *dram,
 	u32 i;
 	void __iomem *phy_base = dram->phy;
 
-	phy_dll_bypass_set(dram, sdram_params->ddr_freq);
+	phy_dll_bypass_set(dram, sdram_params->base.ddr_freq);
 	for (i = 0; sdram_params->phy_regs.phy[i][0] != 0xFFFFFFFF; i++) {
 		writel(sdram_params->phy_regs.phy[i][1],
 		       phy_base + sdram_params->phy_regs.phy[i][0]);
@@ -587,7 +587,7 @@ static void dram_all_config(struct dram_info *dram,
 
 	set_ddrconfig(dram, sdram_ch.ddrconfig);
 
-	sys_reg |= SYS_REG_ENC_DDRTYPE(sdram_params->dramtype);
+	sys_reg |= SYS_REG_ENC_DDRTYPE(sdram_params->base.dramtype);
 	sys_reg |= SYS_REG_ENC_ROW_3_4(sdram_ch.row_3_4, 0);
 	sys_reg |= SYS_REG_ENC_RANK(sdram_ch.rank, 0);
 	sys_reg |= SYS_REG_ENC_COL(sdram_ch.col, 0);
@@ -653,7 +653,7 @@ static int sdram_init(struct dram_info *dram,
 	rkclk_ddr_reset(dram, 1, 1, 1, 0);
 	rkclk_configure_ddr(dram, sdram_params);
 	if (pre_init == 0) {
-		switch (sdram_params->dramtype) {
+		switch (sdram_params->base.dramtype) {
 		case DDR3:
 			printf("DDR3\n");
 			break;
@@ -685,13 +685,13 @@ static int sdram_init(struct dram_info *dram,
 		continue;
 
 	/* do ddr gate training */
-	if (data_training(dram, 0, sdram_params->dramtype) != 0) {
+	if (data_training(dram, 0, sdram_params->base.dramtype) != 0) {
 		printf("data training error\n");
 		return -1;
 	}
 
-	if (sdram_params->dramtype == DDR4)
-		write_vrefdq(dram, 0x3, 5670, sdram_params->dramtype);
+	if (sdram_params->base.dramtype == DDR4)
+		write_vrefdq(dram, 0x3, 5670, sdram_params->base.dramtype);
 
 	if (pre_init == 0) {
 		rx_deskew_switch_adjust(dram);
@@ -724,7 +724,7 @@ static u64 dram_detect_cap(struct dram_info *dram,
 	u32 cs;
 	u32 bw = 1;
 	u64 cap = 0;
-	u32 dram_type = sdram_params->dramtype;
+	u32 dram_type = sdram_params->base.dramtype;
 	u32 pwrctl;
 
 	if (dram_type != DDR4) {
@@ -907,7 +907,7 @@ static int dram_detect_cs1_row(struct rk3328_sdram_params *sdram_params,
 		else
 			cs1_bit = 0;
 
-		if (sdram_params->dramtype == DDR4) {
+		if (sdram_params->base.dramtype == DDR4) {
 			if (sdram_ch.dbw == 0)
 				bktmp = sdram_ch.bk + 2;
 			else
