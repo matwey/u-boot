@@ -96,6 +96,7 @@
 	"kernel_addr=0x7000000\0"	\
 	"kernel_addr_r=0x7000000\0"	\
 	"ramdisk_addr_r=0xa000000\0"	\
+	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	BOOTENV
 
 #endif /* _CONFIG_MVEBU_ARMADA_37XX_H */
