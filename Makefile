@@ -861,18 +861,18 @@ ifeq ($(CONFIG_NEED_BL301), y)
 BL301_BINARY := $(buildtree)/scp_task/bl301.bin
 .PHONY : bl301.bin
 bl301.bin: $(BL301_BINARY)
-$(BL301_BINARY): tools prepare u-boot.bin $(ACS_BINARY) bl21.bin
+$(BL301_BINARY): prepare $(ACS_BINARY) bl21.bin
 	$(Q)$(MAKE) -C $(srctree)/$(CPUDIR)/${SOC}/firmware/scp_task
 endif
 
 .PHONY : acs.bin
 ACS_BINARY := $(buildtree)/$(BOARDDIR)/firmware/acs.bin
 acs.bin: $(ACS_BINARY)
-$(ACS_BINARY): tools prepare u-boot.bin
+$(ACS_BINARY): prepare
 	$(Q)$(MAKE) -C $(srctree)/$(CPUDIR)/${SOC}/firmware/acs all FIRMWARE=$@
 
 .PHONY : bl21.bin
-bl21.bin: tools prepare u-boot.bin acs.bin
+bl21.bin: prepare acs.bin
 	$(Q)$(MAKE) -C $(srctree)/$(CPUDIR)/${SOC}/firmware/bl21 all FIRMWARE=$@
 
 .PHONY : fip.bin bootimage
