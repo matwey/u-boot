@@ -59,7 +59,7 @@ typedef struct acs_setting{
 		unsigned char		rsv_set_version;
 		unsigned short		rsv_set_length;
 		unsigned long		rsv_set_addr;
-}__attribute__ ((packed)) acs_set_t;
+}__attribute__ ((packed, aligned(8))) acs_set_t;
 
 #endif
 #endif
